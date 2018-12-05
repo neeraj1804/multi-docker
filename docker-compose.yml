@@ -1,0 +1,58 @@
+version: "3.1"
+
+services: 
+  postgres:
+    image: postgres:alpine
+
+  redis:
+    image: redis:alpine
+
+  nginx:
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    image: neerajjainwalmart/fib-nginx
+    restart: always
+    ports: 
+      - 80:80
+
+  api:
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./server
+    image: neerajjainwalmart/fib-server
+    volumes: 
+      - /var/app/node_modules
+      - ./server:/var/app
+    environment: 
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432
+    
+  client:
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./client
+    image: neerajjainwalmart/fib-client
+    ports: 
+      - 8080:3000
+    volumes: 
+      - /var/app/node_modules
+      - ./client:/var/app
+  
+  worker:
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    image: neerajjainwalmart/fib-worker
+    volumes: 
+      - /var/app/node_modules
+      - ./worker:/var/app
+    environment: 
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+  
